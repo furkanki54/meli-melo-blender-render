@@ -1,22 +1,6 @@
-FROM ubuntu:22.04
+FROM blender:3.6.0
 
-# Blender için gerekli bağımlılıklar
-RUN apt update && apt install -y \
-    blender \
-    python3 \
-    python3-pip \
-    ffmpeg \
-    && apt clean
-
-# Çalışma dizini
 WORKDIR /app
-
-# Python bağımlılıkları
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
-
-# Tüm proje dosyalarını kopyala
 COPY . .
 
-# Başlangıç komutu
-CMD ["python3", "main.py"]
+CMD ["blender", "-b", "-P", "main.py"]
