@@ -1,17 +1,18 @@
-FROM ubuntu:22.04
+FROM python:3.10-slim
 
-# Sistem güncelle ve Blender bağımlılıklarını kur
-RUN apt update && \
-    apt install -y wget ca-certificates libgl1 libxi6 libxrender1 libxrandr2 libxcursor1 libxinerama1 libglu1-mesa libsm6 libxext6 libxfixes3 libx11-6 && \
-    apt install -y ffmpeg
+# Gerekli sistem bağımlılıkları (FFmpeg için)
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Blender'ı indir ve kur
-RUN wget https://ftp.nluug.nl/pub/graphics/blender/release/Blender3.6/blender-3.6.0-linux-x64.tar.xz && \
-    tar -xf blender-3.6.0-linux-x64.tar.xz && \
-    mv blender-3.6.0-linux-x64 /blender
+# Python bağımlılıklarını yükle
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR /app
+# Proje dosyalarını kopyala
 COPY . .
 
-# Blender ile çalıştır
-CMD ["/blender/blender", "-b", "-P", "main.py"]
+# Çalıştırılacak dosya
+CMD ["python3", "app.py"]
