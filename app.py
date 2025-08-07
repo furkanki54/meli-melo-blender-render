@@ -1,24 +1,27 @@
-from flask import Flask, jsonify
-import subprocess
+# app.py
+
+from flask import Flask, request, jsonify
+from generate_images import generate_image
+from create_video import create_video
 
 app = Flask(__name__)
 
-@app.route("/generate-demo", methods=["POST"])
-def generate_demo():
-    try:
-        # 1. AI sahne üretimi
-        subprocess.run(["python3", "generate_images.py"], check=True)
-        
-        # 2. Karakter bindirme
-        subprocess.run(["python3", "compose_scene.py"], check=True)
-        
-        # 3. Video üretimi
-        subprocess.run(["python3", "create_video.py"], check=True)
+@app.route("/generate-video", methods=["POST"])
+def generate_video():
+    data = request.json
+    prompt = data.get("prompt")
+    audio_file = data.get("audio")  # mp3 dosya yolu
 
-        return jsonify({"status": "success", "message": "Demo video üretimi tamamlandı."})
-    
-    except subprocess.CalledProcessError as e:
-        return jsonify({"status": "error", "message": f"Bir adım hata verdi: {str(e)}"})
+    if not prompt or not audio_file:
+        return jsonify({"error": "Eksik veri"}), 400
+
+    try:
+        image_path = generate_image(prompt)
+        video_path = "output.mp4"
+        create_video(image_path, audio_file, output_path=video_path)
+        return jsonify({"video": video_path})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+    app.run(debug=True)
