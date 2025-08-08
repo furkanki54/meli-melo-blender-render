@@ -4,7 +4,7 @@ import os
 # --- Temiz başlangıç ---
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
-# Render motoru: hızlı olsun
+# Render motoru
 bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 
 # Kamera
@@ -14,7 +14,7 @@ bpy.context.scene.camera = bpy.context.object
 # Işık
 bpy.ops.object.light_add(type='SUN', location=(0, 0, 10))
 
-# --- World / Background güvenli kurulum (KeyError fix) ---
+# --- World güvenli kurulum ---
 if bpy.data.worlds:
     world = bpy.data.worlds[0]
 else:
@@ -22,14 +22,12 @@ else:
 
 bpy.context.scene.world = world
 
-# Node'lar yoksa aç
 if not world.use_nodes:
     world.use_nodes = True
 
-# Background düğümü varsa parlaklığı ayarla
 bg = world.node_tree.nodes.get("Background")
 if bg:
-    bg.inputs[1].default_value = 1.0  # strength
+    bg.inputs[1].default_value = 1.0  # parlaklık
 
 # Zemin
 bpy.ops.mesh.primitive_plane_add(size=30, location=(0, 0, 0))
@@ -60,29 +58,23 @@ def add_cyl(rad, depth, loc, rot, mat):
     ob.data.materials.append(mat)
     return ob
 
-# --- Karakter kurucu (stilize) ---
+# --- Karakter kurucu ---
 def build_kid(x=0, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Kid"):
-    # Kafa + ten
     head = add_sphere(0.7, (x, 0, 2.5), MAT_SKIN); head.name=f"{name}_Head"
-    # Saç
     hair = add_sphere(0.72, (x, 0, 2.65), MAT_HAIR); hair.name=f"{name}_Hair"
-    # Gözler
     eye_L = add_sphere(0.1, (x-0.2, 0.6, 2.6), eye_mat); eye_L.name=f"{name}_EyeL"
     eye_R = add_sphere(0.1, (x+0.2, 0.6, 2.6), eye_mat); eye_R.name=f"{name}_EyeR"
-    # Gövde (tişört)
     body  = add_cyl(0.5, 1.2, (x, 0, 1.3), (0,0,0), shirt_mat); body.name=f"{name}_Body"
-    # Kollar
     arm_L = add_cyl(0.1, 0.8, (x-0.7, 0, 1.6), (0,0,1.57), shirt_mat); arm_L.name=f"{name}_ArmL"
     arm_R = add_cyl(0.1, 0.8, (x+0.7, 0, 1.6), (0,0,1.57), shirt_mat); arm_R.name=f"{name}_ArmR"
-    # Bacaklar (sarı pantolon)
     leg_L = add_cyl(0.15, 0.8, (x-0.2, 0, 0.4), (0,0,0), MAT_YELLOW); leg_L.name=f"{name}_LegL"
     leg_R = add_cyl(0.15, 0.8, (x+0.2, 0, 0.4), (0,0,0), MAT_YELLOW); leg_R.name=f"{name}_LegR"
 
-# --- Meli & Melo ---
-build_kid(x=-1.6, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Meli")  # Meli: yeşil göz, pembe tişört
-build_kid(x= 1.6, eye_mat=MAT_EYE_B, shirt_mat=MAT_BLUE, name="Melo")  # Melo: mavi göz, mavi tişört
+# Meli & Melo
+build_kid(x=-1.6, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Meli")
+build_kid(x= 1.6, eye_mat=MAT_EYE_B, shirt_mat=MAT_BLUE, name="Melo")
 
-# --- Render ayarları ---
+# Render ayarları
 bpy.context.scene.render.image_settings.file_format = 'JPEG'
 bpy.context.scene.render.filepath = os.path.abspath("//scenes/scene1.jpg")
 bpy.context.scene.render.resolution_x = 1280
