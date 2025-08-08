@@ -1,4 +1,6 @@
-flask
-moviepy
-imageio[ffmpeg]
-requests
+Flask==3.0.3
+moviepy==1.0.3
+imageio==2.34.1
+imageio-ffmpeg==0.4.9
+numpy==1.26.4
+requests==2.32.3
