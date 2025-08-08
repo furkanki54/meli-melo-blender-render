@@ -4,16 +4,32 @@ import os
 # --- Temiz başlangıç ---
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
-# Hızlı render için Eevee
+# Render motoru: hızlı olsun
 bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 
 # Kamera
-bpy.ops.object.camera_add(location=(0, -8, 3), rotation=(1.1, 0, 0))
+bpy.ops.object.camera_add(location=(0, -8, 3), rotation=(1.1, 0.0, 0.0))
 bpy.context.scene.camera = bpy.context.object
 
-# Işıklar
+# Işık
 bpy.ops.object.light_add(type='SUN', location=(0, 0, 10))
-bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[1].default_value = 1.0
+
+# --- World / Background güvenli kurulum (KeyError fix) ---
+if bpy.data.worlds:
+    world = bpy.data.worlds[0]
+else:
+    world = bpy.data.worlds.new("World")
+
+bpy.context.scene.world = world
+
+# Node'lar yoksa aç
+if not world.use_nodes:
+    world.use_nodes = True
+
+# Background düğümü varsa parlaklığı ayarla
+bg = world.node_tree.nodes.get("Background")
+if bg:
+    bg.inputs[1].default_value = 1.0  # strength
 
 # Zemin
 bpy.ops.mesh.primitive_plane_add(size=30, location=(0, 0, 0))
@@ -24,11 +40,11 @@ def make_mat(name, rgba):
     m.diffuse_color = rgba
     return m
 
-MAT_HAIR   = make_mat("Hair",   (1.0, 0.9, 0.6, 1))  # sarışın
-MAT_PINK   = make_mat("ShirtPink", (1.0, 0.4, 0.7, 1))
-MAT_BLUE   = make_mat("ShirtBlue", (0.3, 0.5, 1.0, 1))
-MAT_YELLOW = make_mat("PantsYellow", (1.0, 1.0, 0.2, 1))
-MAT_SKIN   = make_mat("Skin",   (1.0, 0.8, 0.65, 1))
+MAT_HAIR   = make_mat("Hair",   (1.0, 0.9, 0.6, 1))      # sarışın
+MAT_PINK   = make_mat("ShirtPink", (1.0, 0.4, 0.7, 1))   # Meli tişört
+MAT_BLUE   = make_mat("ShirtBlue", (0.3, 0.5, 1.0, 1))   # Melo tişört
+MAT_YELLOW = make_mat("PantsYellow", (1.0, 1.0, 0.2, 1)) # pantolon
+MAT_SKIN   = make_mat("Skin",   (1.0, 0.8, 0.65, 1))     # ten
 MAT_EYE_G  = make_mat("EyeGreen", (0.25, 0.85, 0.35, 1))
 MAT_EYE_B  = make_mat("EyeBlue",  (0.3, 0.55, 1.0, 1))
 
@@ -44,7 +60,7 @@ def add_cyl(rad, depth, loc, rot, mat):
     ob.data.materials.append(mat)
     return ob
 
-# --- Karakter kurucu (basit, stilize) ---
+# --- Karakter kurucu (stilize) ---
 def build_kid(x=0, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Kid"):
     # Kafa + ten
     head = add_sphere(0.7, (x, 0, 2.5), MAT_SKIN); head.name=f"{name}_Head"
@@ -63,12 +79,10 @@ def build_kid(x=0, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Kid"):
     leg_R = add_cyl(0.15, 0.8, (x+0.2, 0, 0.4), (0,0,0), MAT_YELLOW); leg_R.name=f"{name}_LegR"
 
 # --- Meli & Melo ---
-# Meli: yeşil göz, pembe tişört, sarı pantolon, sarışın
-build_kid(x=-1.6, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Meli")
-# Melo: mavi göz, mavi tişört, sarı pantolon, sarışın
-build_kid(x= 1.6, eye_mat=MAT_EYE_B, shirt_mat=MAT_BLUE, name="Melo")
+build_kid(x=-1.6, eye_mat=MAT_EYE_G, shirt_mat=MAT_PINK, name="Meli")  # Meli: yeşil göz, pembe tişört
+build_kid(x= 1.6, eye_mat=MAT_EYE_B, shirt_mat=MAT_BLUE, name="Melo")  # Melo: mavi göz, mavi tişört
 
-# Render ayarları
+# --- Render ayarları ---
 bpy.context.scene.render.image_settings.file_format = 'JPEG'
 bpy.context.scene.render.filepath = os.path.abspath("//scenes/scene1.jpg")
 bpy.context.scene.render.resolution_x = 1280
