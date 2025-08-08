@@ -2,7 +2,7 @@ import os
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 
 SCENES_FOLDER = "scenes"       # Görsellerin olduğu klasör
-VOICES_FOLDER = "voices"       # Seslerin olduğu klasör
+VOICES_FOLDER = "scenes"       # Seslerin olduğu klasör
 OUTPUT_FILE = "output_video.mp4"
 
 def natural_sort_key(s):
