@@ -1,22 +1,19 @@
 FROM ubuntu:22.04
 
-# Blender ve bağımlılıklarını kur
-RUN apt-get update && apt-get install -y \
+# Blender + headless çalışması için gereken paketler
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     blender \
-    python3 \
-    python3-pip \
+    python3 python3-pip \
     ffmpeg \
+    xvfb x11-xserver-utils \
+    libgl1 libgl1-mesa-glx libxi6 libxrender1 libxxf86vm1 libxfixes3 libxkbcommon0 libx11-6 \
     && apt-get clean
 
-# Çalışma dizini
 WORKDIR /app
 
-# Gereken Python paketleri
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
-# Proje dosyalarını kopyala
 COPY . .
 
-# Varsayılan komut
 CMD ["python3", "app.py"]
