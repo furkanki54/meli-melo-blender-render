@@ -1,27 +1,21 @@
 # app.py
 
-from flask import Flask, request, jsonify
-from generate_images import generate_image
+from flask import Flask, jsonify
 from create_video import create_video
 
 app = Flask(__name__)
 
-@app.route("/generate-video", methods=["POST"])
-def generate_video():
-    data = request.json
-    prompt = data.get("prompt")
-    audio_file = data.get("audio")  # mp3 dosya yolu
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"ok": True})
 
-    if not prompt or not audio_file:
-        return jsonify({"error": "Eksik veri"}), 400
-
+@app.route("/create-video", methods=["POST"])
+def create_video_endpoint():
     try:
-        image_path = generate_image(prompt)
-        video_path = "output.mp4"
-        create_video(image_path, audio_file, output_path=video_path)
-        return jsonify({"video": video_path})
+        create_video()
+        return jsonify({"status": "success", "video": "output_video.mp4"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=3000)
