@@ -1,16 +1,16 @@
-# app.py — FINAL
+# app.py — trigger + health + download
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from create_video import create_video  # scene_*.jpg/png + scene_*.mp3 -> output_video.mp4
 
 app = Flask(__name__)
 
-# Sağlık kontrolü (Railway Health Checks için)
+# Healthcheck
 @app.get("/health")
 def health():
     return jsonify(ok=True)
 
-# POST ile tetikleme (istenirse)
+# POST ile tetikleme (opsiyonel)
 @app.post("/create-video")
 def create_video_post():
     try:
@@ -19,7 +19,7 @@ def create_video_post():
     except Exception as e:
         return jsonify(status="error", message=str(e)), 500
 
-# GET ile tek-tık tetikleme (gizli anahtar gerekli)
+# GET ile tetikleme (secret key)
 @app.get("/trigger")
 def trigger_get():
     key = request.args.get("key", "")
@@ -34,6 +34,15 @@ def trigger_get():
         return jsonify(status="success", via="GET", video="output_video.mp4")
     except Exception as e:
         return jsonify(status="error", message=str(e)), 500
+
+# Üretilen videoyu indir
+@app.get("/download")
+def download_video():
+    path = "output_video.mp4"
+    if not os.path.exists(path):
+        return jsonify(status="error", message="Video not found"), 404
+    # dosyayı indirme olarak gönder
+    return send_file(path, as_attachment=True)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 3000))
