@@ -1,10 +1,10 @@
 import os
 import sys
 
-# scenes çıktıları dursun
+# scenes klasörünü oluştur
 os.makedirs("scenes", exist_ok=True)
 
-# Blender'ı headless çalıştır: scene.py içindeki bpy kodu burada koşar
+# Headless (GUI’siz) Blender çalıştırma
 exit_code = os.system("blender --background --python scene.py")
 if exit_code != 0:
     print("❌ Blender çalıştırılamadı. Loglara bak.")
