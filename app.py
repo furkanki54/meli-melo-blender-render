@@ -1,5 +1,20 @@
 import os, subprocess, traceback
 from flask import Flask, send_from_directory, request, jsonify
+
+# --- Pillow 10 uyumluluk yamasi: Image.ANTIALIAS kaldırıldı, LANCZOS'a eşitle ---
+try:
+    from PIL import Image as _PILImage
+    if not hasattr(_PILImage, "ANTIALIAS"):
+        # Pillow 10+: Resampling.LANCZOS mevcut
+        try:
+            _PILImage.ANTIALIAS = _PILImage.Resampling.LANCZOS  # type: ignore
+        except Exception:
+            # Bazı build'lerde LANCZOS üst düzeyde de olabilir
+            _PILImage.ANTIALIAS = getattr(_PILImage, "LANCZOS", 1)  # 1 = default
+except Exception:
+    pass
+# -------------------------------------------------------------------------------
+
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 
 app = Flask(__name__)
@@ -10,7 +25,6 @@ os.makedirs(SCENES_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def run_blender(scene_py="scene.py"):
-    # Headless Blender (xvfb-run ile çağrıyoruz; Dockerfile tarafı hazır)
     cmd = ["xvfb-run", "-a", "blender", "-b", "--python", scene_py]
     p = subprocess.run(cmd, capture_output=True, text=True)
     return p.returncode, p.stdout + "\n" + p.stderr
@@ -38,12 +52,6 @@ def auto_count(prefix: str) -> int:
     return i - 1
 
 def make_timeline(fallback_image: str, prefix: str, count: int, fps: int):
-    """
-    scenes/
-      - meli_melo.png.PNG (fallback)
-      - scene1.mp3 ... sceneN.mp3
-      - (opsiyonel) scene1.jpg ... sceneN.jpg
-    """
     fallback_path = os.path.join(SCENES_DIR, fallback_image)
     if not os.path.exists(fallback_path):
         return False, f"Fallback image not found: {fallback_path}"
